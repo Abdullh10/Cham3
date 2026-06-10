@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>كيمياء برو | منصة المراجعة الذكية</title>
+    <!-- خط IBM Plex Sans Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- أيقونات Font Awesome (مجانية) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- KaTeX للمعادلات والصيغ الكيميائية -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --bg: #f4fbf9;
+            --surface: #ffffff;
+            --text: #1f2a44;
+            --text-muted: #5b6e8c;
+            --border: #dfeef2;
+            --primary: #0f9f77;
+            --primary-dark: #0b7a5a;
+            --primary-light: #d9f4ec;
+            --correct: #16a34a;
+            --correct-bg: #e0f2e9;
+            --wrong: #dc2626;
+            --wrong-bg: #fee2e2;
+            --marked: #f59e0b;
+            --marked-bg: #fffbeb;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            --radius-card: 28px;
+            --radius-btn: 40px;
+        }
+        body.dark {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary-light: #115e59;
+            --correct-bg: #064e3b;
+            --wrong-bg: #7f1d1d;
+            --marked-bg: #78350f;
+        }
+        body {
+            background: var(--bg);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            color: var(--text);
+            transition: all 0.2s ease;
+            padding: 24px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* ترويسة عليا */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-card);
+            padding: 28px 32px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow);
+        }
+        .hero h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hero-badges {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-pill {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            border-radius: 60px;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+        /* grid رئيسي */
+        .dashboard {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+        /* الشريط الجانبي (فهرسة وتصفية) */
+        .sidebar {
+            flex: 1.2;
+            min-width: 280px;
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+            transition: all 0.2s;
+        }
+        .sidebar h3 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+        .filter-box {
+            margin-bottom: 24px;
+        }
+        .filter-box input, .filter-box select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            margin-top: 8px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .filter-box input:focus, .filter-box select:focus {
+            border-color: var(--primary);
+        }
+        .status-filter {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .status-btn {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .status-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .questions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .q-marker {
+            aspect-ratio: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.9rem;
+        }
+        .q-marker.correct { background: var(--correct-bg); color: var(--correct); border-color: var(--correct); }
+        .q-marker.wrong { background: var(--wrong-bg); color: var(--wrong); border-color: var(--wrong); }
+        .q-marker.marked { background: var(--marked-bg); color: var(--marked); border-color: var(--marked); }
+        .q-marker.current { border: 2.5px solid var(--primary); background: var(--primary-light); transform: scale(1.03); }
+        .reset-sidebar-btn {
+            margin-top: 24px;
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        /* المحتوى الرئيسي */
+        .main {
+            flex: 3;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+        /* شريط الإحصائيات المتقدم */
+        .stats-row {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 20px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--border);
+        }
+        .stats-card {
+            background: var(--bg);
+            border-radius: 24px;
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 100px;
+        }
+        .stats-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        .progress-area {
+            flex: 2;
+            min-width: 180px;
+        }
+        .progress-bar-bg {
+            background: var(--border);
+            height: 12px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            background: var(--primary);
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        /* بطاقة السؤال */
+        .question-card {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 32px;
+            border: 1px solid var(--border);
+            transition: 0.2s;
+        }
+        .topic-tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .question-text {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .option {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: 60px;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .option:hover:not(.disabled-opt) {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .option.correct-highlight {
+            background: var(--correct-bg);
+            border-color: var(--correct);
+            color: var(--correct);
+        }
+        .option.wrong-highlight {
+            background: var(--wrong-bg);
+            border-color: var(--wrong);
+            color: var(--wrong);
+        }
+        .disabled-opt {
+            cursor: default;
+        }
+        .feedback-area {
+            margin-top: 20px;
+            background: var(--bg);
+            padding: 18px;
+            border-radius: 24px;
+            border-right: 5px solid var(--primary);
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+        button {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button.primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        button.primary:hover {
+            background: var(--primary-dark);
+        }
+        /* مولد الاختبارات */
+        .randomizer-card {
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .quiz-control {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .quiz-control input {
+            width: 80px;
+            padding: 8px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            text-align: center;
+        }
+        .generated-quiz {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        /* Toast و مودال */
+        .toast-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--surface);
+            border-right: 4px solid var(--primary);
+            padding: 12px 20px;
+            border-radius: 60px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            z-index: 2000;
+            animation: fadeUp 0.3s ease;
+            font-weight: 500;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 28px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+        }
+        @keyframes fadeUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 800px) {
+            body { padding: 16px; }
+            .sidebar { position: static; }
+        }
+        .print-hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1><i class="fas fa-flask"></i> باقة الكيمياء الشاملة</h1>
+        <div class="hero-badges">
+            <span class="stat-pill"><i class="fas fa-database"></i> 67 سؤالاً تفاعلياً</span>
+            <button id="themeSwitcher" class="stat-pill" style="background: rgba(255,255,255,0.2); border: none; cursor: pointer;"><i class="fas fa-moon"></i> الوضع الليلي</button>
+            <button id="restartFromLastBtn" class="stat-pill" style="background: rgba(255,255,255,0.2); border: none;"><i class="fas fa-play-circle"></i> استئناف</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- الشريط الجانبي -->
+        <div class="sidebar">
+            <h3><i class="fas fa-filter"></i> فهرسة وتصفية</h3>
+            <div class="filter-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="ابحث عن سؤال أو موضوع ...">
+            </div>
+            <div class="filter-box">
+                <select id="topicSelect"></select>
+            </div>
+            <div class="status-filter">
+                <div data-filter="all" class="status-btn active" id="filterAll">الكل</div>
+                <div data-filter="wrong" class="status-btn" id="filterWrong">الخاطئة فقط</div>
+                <div data-filter="marked" class="status-btn" id="filterMarked">المهمة</div>
+            </div>
+            <div class="questions-grid" id="questionsGrid"></div>
+            <button class="reset-sidebar-btn" id="fullResetBtn"><i class="fas fa-undo-alt"></i> إعادة تعيين التقدم الكامل</button>
+        </div>
+
+        <!-- القسم الرئيسي -->
+        <div class="main">
+            <!-- إحصائيات متطورة -->
+            <div class="stats-row">
+                <div class="stats-card"><div class="stats-number" id="totalAnswered">0</div><div>تمت الإجابة</div></div>
+                <div class="stats-card" style="color: var(--correct);"><div class="stats-number" id="correctCount">0</div><div>✔ صحيحة</div></div>
+                <div class="stats-card" style="color: var(--wrong);"><div class="stats-number" id="wrongCount">0</div><div>✘ خاطئة</div></div>
+                <div class="progress-area">
+                    <div>نسبة الإنجاز <span id="percentVal">0%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-fill" id="progressFill"></div></div>
+                </div>
+            </div>
+
+            <!-- بطاقة السؤال الحالي -->
+            <div id="questionCard"></div>
+
+            <!-- مولد الاختبارات العشوائية -->
+            <div class="randomizer-card">
+                <div class="flex-row">
+                    <h3><i class="fas fa-dice-d6"></i> مولد اختبارات عشوائي ذكي</h3>
+                    <div class="quiz-control">
+                        <span>عدد الأسئلة:</span>
+                        <input type="number" id="quizSize" value="10" min="1" max="67">
+                        <button id="generateQuizBtn" class="primary"><i class="fas fa-magic"></i> إنشاء اختبار</button>
+                    </div>
+                </div>
+                <div id="generatedQuizArea" class="generated-quiz"></div>
+                <div id="exportActions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ترحيبي/تعليمي -->
+<div id="welcomeModal" class="modal">
+    <div class="modal-content">
+        <i class="fas fa-graduation-cap" style="font-size: 48px; color: var(--primary);"></i>
+        <h2 style="margin: 16px 0;">مرحباً في موسوعة الكيمياء</h2>
+        <p>✓ اختر إجابة، سيتم توضيح الصحة فوراً مع شرح مبسط.<br>
+        ✓ يمكنك تصفية الأسئلة حسب الموضوع أو الأخطاء.<br>
+        ✓ تمييز الأسئلة المهمة (⭐) للرجوع إليها.<br>
+        ✓ أنشئ اختباراً عشوائياً بحجم تريده، واطبعه أو احفظه كـ PDF.<br>
+        ✓ يحفظ المتصفح تقدمك تلقائياً.</p>
+        <button id="closeWelcome" class="primary" style="margin-top: 20px;">ابدأ المراجعة الآن</button>
+    </div>
+</div>
+
+<script>
+    // ---------- بنك الأسئلة الأصلي (67 سؤالاً) محفوظ بالكامل -------
+    const ORIGINAL_QUESTIONS = [
+        {s:"الكيمياء العضوية",q:"العنصر الذي يشكّل أساس المركبات العضوية هو:",o:["الكربون","الأكسجين","الهيدروجين","النيتروجين"],a:0,f:"الكربون هو عنصر الحياة؛ قدرته على تكوين سلاسل طويلة ومتشعبة وحلقية تجعله أساس جميع المركبات العضوية."},
+        {s:"الكيمياء العضوية",q:"تُعدّ الألكينات مركبات:",o:["قطبية","غير قطبية","فلزية","أيونية"],a:1,f:"الألكينات تحتوي على روابط C-C وC-H متماثلة الكهرسلبية، مما يجعلها غير قطبية وغير قابلة للذوبان في الماء."},
+        {s:"الكيمياء العضوية",q:"المجموعة الوظيفية في المركب CH₃OCH₃ هي:",o:["إيثر","أمين","هيدروكسيل","كربوكسيل"],a:0,f:"الرابطة C-O-C تميّز مجموعة الإيثر."},
+        {s:"سرعة التفاعل",q:"أثناء التفاعل الكيميائي، كمية المواد المتفاعلة:",o:["تزداد","تنقص","لا تتغير","تتضاعف"],a:1,f:"تُستهلك المواد المتفاعلة بمرور الوقت لتكوين المنتجات."},
+        {s:"الاتزان الكيميائي",q:"تأثير الأيون المشترك يؤدي إلى:",o:["زيادة ذوبانية المادة","إبطاء التفاعل","انخفاض ذوبانية المادة","زيادة ثابت الاتزان"],a:2,f:"إضافة أيون مشترك تزيح اتزان الإذابة نحو اليسار فتقل الذوبانية."},
+        {s:"الاتزان الكيميائي",q:"الحالة التي تتساوى فيها سرعة التفاعل الأمامي مع سرعة التفاعل العكسي تُسمى:",o:["الاتزان الكيميائي","التفاعل الكيميائي","الرابطة الكيميائية","الأكسدة"],a:0,f:"الاتزان الكيميائي حالة ديناميكية."},
+        {s:"الاتزان الكيميائي",q:"في التفاعل 3A(aq) + B(aq) ⇌ 2C(aq)، إذا كان [A]=2M, [B]=1M, [C]=4M، فإن قيمة Keq تساوي:",o:["2","0.5","4","8"],a:0,f:"Keq = [C]² / ([A]³[B]) = 16/8 = 2."},
+        {s:"الكيمياء العضوية",q:"ينتج عن ارتباط جزيء فركتوز + جزيء جلوكوز:",o:["مالتوز","لاكتوز","سكروز","نشا"],a:2,f:"السكروز = جلوكوز + فركتوز."},
+        {s:"الكيمياء العضوية",q:"في الألكانات ذات السلاسل المتفرعة، كل تفرع جانبي متصل بالسلسلة الرئيسية يُسمى:",o:["كربونًا غير متماثل","ألكان حلقي","مجموعة بديلة","ألكيل"],a:2,f:"المجموعة البديلة (Substituent)."},
+        {s:"الكيمياء العضوية",q:"أقل المركبات الأمينية ذائبية في الماء من بين: CH₃NH₂، C₄H₉NH₂، C₂H₅NH₂:",o:["CH₃NH₂","C₄H₉NH₂","C₂H₅NH₂","تتساوى جميعها"],a:1,f:"كلما زادت السلسلة الهيدروكربونية قلّت الذوبانية."},
+        {s:"الكيمياء العضوية",q:"من أبسط الكيتونات:",o:["إيثانون (أسيتون)","2-بروبانون","ميثانون","بروبانون"],a:1,f:"أبسط الكيتونات هو 2-بروبانون (الأسيتون)."},
+        {s:"الاتزان الكيميائي",q:"معادلة كيميائية موزونة تشمل الحالات الفيزيائية والتغير في المحتوى الحراري ΔH تُسمى:",o:["المعادلة الأيونية","المعادلة النهائية","المعادلة الحرارية (الثرموكيميائية)","معادلة نصف التفاعل"],a:2,f:"المعادلة الثرموكيميائية تتضمن ΔH والحالات الفيزيائية."},
+        {s:"الديناميكا الحرارية",q:"أي التغيرات التالية ماص للحرارة: NaCl(s)→NaCl(l)، Br₂(l)→Br₂(s)، NH₃(g)→NH₃(l):",o:["NaCl(s)→NaCl(l)","Br₂(l)→Br₂(s)","NH₃(g)→NH₃(l)","لا شيء منها"],a:0,f:"الانصهار عملية ماصة للحرارة."},
+        {s:"الديناميكا الحرارية",q:"في التفاعل الماص للحرارة، تنتقل الحرارة من:",o:["المحيط إلى الكون","النظام إلى المحيط","المحيط إلى النظام","لا انتقال للحرارة"],a:2,f:"يمتص النظام حرارة من المحيط."},
+        {s:"الديناميكا الحرارية",q:"حرارة التكوين للعنصر في حالته القياسية تساوي:",o:["2 kJ/mol","0 kJ/mol","1 kJ/mol","−1 kJ/mol"],a:1,f:"بتعريف: حرارة تكوين العنصر الحر = صفر."},
+        {s:"الديناميكا الحرارية",q:"في التفاعل: 2CO+2NO⇌2CO₂+N₂، باستخدام: a) 2CO+O₂→2CO₂ ΔH=−566kJ، b) N₂+O₂→2NO ΔH=+180kJ، قيمة ΔH للتفاعل المطلوب:",o:["−746 kJ","−386 kJ","+386 kJ","−180 kJ"],a:0,f:"(−566) + (−180) = −746 kJ."},
+        {s:"الكيمياء الحيوية",q:"الرابطة التي تجمع حمضَين أمينيَّين هي:",o:["الرابطة الببتيدية","الرابطة الأيونية","الرابطة الهيدروجينية","الرابطة التساهمية غير القطبية"],a:0,f:"الرابطة الببتيدية (-CO-NH-)."},
+        {s:"الكيمياء الحيوية",q:"القاعدة النيتروجينية التي لا توجد في DNA:",o:["اليوراسيل","الثايمين","الجوانين","الأدينين"],a:0,f:"اليوراسيل (U) خاص بـRNA."},
+        {s:"الكيمياء العضوية",q:"جميع الروابط بين ذرات الكربون أحادية في:",o:["الأحماض الدهنية غير المشبعة","الشموع","الأحماض الدهنية المشبعة","الألكينات"],a:2,f:"الأحماض الدهنية المشبعة روابطها كلها أحادية."},
+        {s:"الكيمياء العضوية",q:"ألكاين يُستعمل لأغراض اللحام:",o:["بيوتاين−1","الإيثاين (أسيتيلين)","البروباين","الميثان"],a:1,f:"الإيثاين (أسيتيلين) لهب أوكسي أسيتيليني شديد الحرارة."},
+        {s:"الكيمياء العضوية",q:"متشكلات تنتج عن ترتيب واتجاهات فراغية لأربع مجموعات مختلفة حول ذرة الكربون تُسمى:",o:["متشكلات ضوئية","متشكلات هندسية","متشكلات بنائية","متشكلات تطابقية"],a:0,f:"كربون غير متماثل → متشكلات ضوئية."},
+        {s:"الكيمياء العضوية",q:"الصيغة الجزيئية للإيثين هي:",o:["C₂H₆","C₂H₅","C₂H₄","C₂H₂"],a:2,f:"الإيثين C₂H₄."},
+        {s:"الكيمياء العضوية",q:"أبسط الألكاينات وأكثرها استخدامًا:",o:["الهبتاين","البروباين","الإيثاين","الميثاين"],a:2,f:"الإيثاين (أسيتيلين)."},
+        {s:"الكيمياء العضوية",q:"يمكن تحضير بيوتيل أمين عن طريق تفاعل:",o:["برومو بيوتان مع النشادر","برومو بيوتان مع الماء","برومو بيوتان مع هيدروكسيد الكالسيوم","برومو بيوتان مع حمض الهيدروكلوريك"],a:0,f:"C₄H₉Br + NH₃ → C₄H₉NH₂ + HBr."},
+        {s:"الكيمياء العضوية",q:"اسم المركب الحلقي الذي يحمل مجموعة كلور (Cl) مرتبطة ببنزين حلقي:",o:["كلوروهكسان حلقي","كلوريد البنزيل","كلوروبنزين","هكسيل كلوريد"],a:2,f:"كلوروبنزين C₆H₅Cl."},
+        {s:"الكيمياء العضوية",q:"تفاعلات تكوين الإسترات تُصنَّف ضمن:",o:["تكاثف","استبدال","أكسدة","إضافة"],a:0,f:"تفاعل تكاثف (حمض + كحول ← إستر + ماء)."},
+        {s:"الكيمياء العضوية",q:"بوليمر الباكليت يمتاز بالصلابة واللمعان، لذا يُستخدم في:",o:["أجهزة الوقود الكبيرة","الأقراص المدمجة","ألعاب الأطفال","مواد التغليف"],a:1,f:"الباكليت يستخدم في الأقراص المدمجة والأجزاء الكهربائية."},
+        {s:"الكيمياء العضوية",q:"مجموعة الكربونيل هي ذرة كربون مرتبطة بذرة:",o:["أكسجين برابطة ثنائية","أكسجين برابطة أحادية","نيتروجين برابطة أحادية","هيدروجين برابطة مزدوجة"],a:0,f:"مجموعة الكربونيل C=O."},
+        {s:"سرعة التفاعل",q:"تفاعل حمض الكلور مع مسحوق الرخام أسرع من تفاعله مع قطعة الرخام المماثلة في الكتلة، وذلك بسبب:",o:["نقصان مساحة منطقة التلامس","زيادة مساحة منطقة التلامس","تساوي منطقة التلامس","زيادة تركيز الحمض"],a:1,f:"الطحن يزيد مساحة السطح ويزيد السرعة."},
+        {s:"سرعة التفاعل",q:"تؤدي الزيادة في درجة الحرارة إلى زيادة سرعة التفاعل بسبب:",o:["زيادة طاقة التنشيط","زيادة متوسط الطاقة الحركية للجسيمات","زيادة مساحة السطح","زيادة تركيز المتفاعلات"],a:1,f:"ارتفاع الحرارة يزيد الطاقة الحركية."},
+        {s:"سرعة التفاعل",q:"إذا كان تركيز كلوريد البيوتان في بداية التفاعل 0.22M ثم أصبح 0.1M بعد 4 ثوانٍ، فمتوسط سرعة التفاعل يساوي:",o:["0.03 M/s","0.01 M/s","0.005 M/s","0.12 M/s"],a:0,f:"(0.22-0.10)/4 = 0.03 M/s."},
+        {s:"الاتزان الكيميائي",q:"في التفاعل 2SO₃(g) ⇌ 2SO₂(g) + O₂(g)، عند انقاص حجم وعاء التفاعل فإنه:",o:["يزداد تركيز O₂","يزداد تركيز SO₂","يزداد تركيز SO₃","تتساوى التراكيز"],a:2,f:"تقليل الحجم يزيد الضغط -> نحو اليسار (SO₃)."},
+        {s:"الاتزان الكيميائي",q:"تعبير ثابت الاتزان للتفاعل: 2NaHCO₃(s) ⇌ Na₂CO₃(s) + CO₂(g) + H₂O(g):",o:["[Na₂CO₃]","[CO₂][H₂O]","[Na₂CO₃][CO₂][H₂O] / [NaHCO₃]²","[NaHCO₃]²"],a:1,f:"المواد الصلبة لا تدرج → Keq = [CO₂][H₂O]."},
+        {s:"الكيمياء العضوية",q:"الاسم النظامي للمركب: CH₃CH₂CH(CH₃)CH₃",o:["2-ميثيل بيوتان","3-ميثيل بيوتان","2-ميثيل بروبان","إيزوبنتان"],a:0,f:"السلسلة الرئيسية بيوتان، والميثيل على الكربون 2."},
+        {s:"الكيمياء العضوية",q:"في الصيغة البنائية لـ 3,2-ثنائي ميثيل هبتان، عدد ذرات الكربون الكلي هو:",o:["7","9","11","8"],a:1,f:"هبتان (7) + 2 ميثيل = 9 كربونات."},
+        {s:"الكيمياء العضوية",q:"سبب وضع رموز إعادة التدوير على المنتجات البلاستيكية:",o:["لتحديد الشركة المصنعة","لتسهيل تصنيف وإعادة تدوير البلاستيك","لمنع التقليد","لتحديد تاريخ الصنع"],a:1,f:"رموز إعادة التدوير تسهل الفرز."},
+        {s:"سرعة التفاعل",q:"المادة الحافزة تزيد من سرعة التفاعل لأنها:",o:["ترفع درجة الحرارة","تُوفّر مسارًا بديلًا بطاقة تنشيط أقل","تزيد من تركيز المتفاعلات","تزيد مساحة السطح"],a:1,f:"المحفز يخفض طاقة التنشيط."},
+        {s:"سرعة التفاعل",q:"أي العوامل التالية لا تؤثر في سرعة التفاعل الكيميائي؟",o:["التركيز","طبيعة المواد","حجم الإناء (دون تغيير التركيز)","درجة الحرارة"],a:2,f:"حجم الإناء إذا لم يتغير التركيز لا يؤثر."},
+        {s:"الكيمياء العضوية",q:"الصيغة العامة للألكانات هي:",o:["CₙH₂ₙ","CₙH₂ₙ₋₂","CₙH₂ₙ₊₂","CₙHₙ"],a:2,f:"الألكانات مشبعة CₙH₂ₙ₊₂."},
+        {s:"الكيمياء العضوية",q:"أي المجموعات الوظيفية التالية تميّز الكحولات؟",o:["C=O","−OH","−COOH","−NH₂"],a:1,f:"مجموعة الهيدروكسيل -OH."},
+        {s:"الكيمياء العضوية",q:"أي المركبات التالية هو حمض كربوكسيلي؟",o:["CH₃OH","CH₃CHO","CH₃COOH","CH₃OCH₃"],a:2,f:"CH₃COOH حمض الأسيتيك."},
+        {s:"الكيمياء العضوية",q:"اسم البوليمر الناتج من بلمرة كلوريد الفينيل (CH₂=CHCl):",o:["البولي إيثيلين","البولي كلوريد الفينيل (PVC)","النايلون","الباكليت"],a:1,f:"PVC من بلمرة كلوريد الفينيل."},
+        {s:"الكيمياء العضوية",q:"الألدهيدات تتميز عن الكيتونات بأن مجموعة الكربونيل فيها:",o:["في منتصف السلسلة","على طرف السلسلة الكربونية","ترتبط بذرتَي كربون","ترتبط بحلقة بنزين"],a:1,f:"الألدهيد مجموعة الكربونيل طرفية."},
+        {s:"الاتزان الكيميائي",q:"وفق مبدأ لو شاتيليه، إضافة غاز خامل إلى خليط اتزان عند حجم ثابت:",o:["تزيح الاتزان نحو اليمين","تزيح الاتزان نحو اليسار","لا تؤثر على موضع الاتزان","تزيد ثابت الاتزان"],a:2,f:"لا يغير التراكيز فلا تأثير."},
+        {s:"الاتزان الكيميائي",q:"إذا كان Keq >> 1، فإن ذلك يعني:",o:["المتفاعلات تسود","المنتجات تسود","التفاعل لا يحدث","التركيزات متساوية"],a:1,f:"Keq كبير → سيادة المنتجات."},
+        {s:"الديناميكا الحرارية",q:"التفاعل الطارد للحرارة (ΔH < 0) يعني أن:",o:["النظام يمتص حرارة من المحيط","المنتجات أقل طاقة من المتفاعلات","المتفاعلات أقل طاقة من المنتجات","طاقة التنشيط صفر"],a:1,f:"المنتجات أقل طاقة وتطلق حرارة."},
+        {s:"الديناميكا الحرارية",q:"وحدة قياس التغير في المحتوى الحراري ΔH هي:",o:["Pa","mol/L","kJ/mol","J/s"],a:2,f:"كيلوجول لكل مول."},
+        {s:"الديناميكا الحرارية",q:"قانون هس ينص على أن التغير في المحتوى الحراري:",o:["يعتمد على المسار","لا يعتمد على المسار (يعتمد على الحالة الابتدائية والنهائية)","يتناسب مع درجة الحرارة","يساوي دائمًا صفرًا"],a:1,f:"قانون هس: يعتمد على الحالة الابتدائية والنهائية."},
+        {s:"الكيمياء الحيوية",q:"وظيفة الإنزيمات في الجسم:",o:["تخزين الطاقة","نقل الأكسجين","تسريع التفاعلات الحيوية كمحفزات بيولوجية","بناء أغشية الخلايا"],a:2,f:"الإنزيمات محفزات بيولوجية."},
+        {s:"الكيمياء الحيوية",q:"الجزيء الأحادي (Monomer) للبروتينات هو:",o:["الجلوكوز","الأحماض الأمينية","الأحماض الدهنية","النيوكليوتيدات"],a:1,f:"الأحماض الأمينية."},
+        {s:"الكيمياء الحيوية",q:"السكريات الثنائية تنتج من اتحاد:",o:["حمضين أمينيين","وحدتَي سكر أحادية","قاعدتَين نيتروجينيتَين","حمضَين دهنيَّين"],a:1,f:"سكر أحادي + سكر أحادي."},
+        {s:"الكيمياء الحيوية",q:"المونومر المكوِّن للأحماض النووية (DNA/RNA) هو:",o:["الحمض الأميني","النيوكليوتيد","الجلوكوز","الغليسيرول"],a:1,f:"النيوكليوتيد."},
+        {s:"الكيمياء الحيوية",q:"الفرق بين DNA وRNA من حيث السكر الخماسي:",o:["DNA يحتوي الريبوز، RNA يحتوي الديوكسيريبوز","DNA يحتوي الديوكسيريبوز، RNA يحتوي الريبوز","كلاهما يحتوي الريبوز","كلاهما يحتوي الديوكسيريبوز"],a:1,f:"DNA: ديوكسيريبوز, RNA: ريبوز."},
+        {s:"الكيمياء العضوية",q:"مجموعة الكربوكسيل (−COOH) تتكون من مجموعة:",o:["الكربونيل + الهيدروكسيل","الأمينو + الكربونيل","الإيثر + الهيدروكسيل","الكيتون + الألدهيد"],a:0,f:"كربونيل + هيدروكسيل."},
+        {s:"الكيمياء العضوية",q:"اسم المركب CH₃CH₂CH₂OH هو:",o:["إيثانول","بروبان-1-ول","بيوتانول","ميثانول"],a:1,f:"بروبان-1-ول."},
+        {s:"سرعة التفاعل",q:"أي العبارات التالية صحيحة بشأن طاقة التنشيط؟",o:["طاقة التنشيط تُطلق أثناء التفاعل","طاقة التنشيط هي أدنى طاقة لازمة لبدء التفاعل","المحفز يزيد طاقة التنشيط","طاقة التنشيط لا علاقة لها بسرعة التفاعل"],a:1,f:"طاقة التنشيط هي الحد الأدنى للطاقة لبدء التفاعل."},
+        {s:"سرعة التفاعل",q:"زيادة تركيز المتفاعلات يزيد من سرعة التفاعل لأن:",o:["يزيد الطاقة الحركية للجزيئات","يزيد عدد التصادمات في وحدة الزمن","يقلل طاقة التنشيط","يرفع درجة الحرارة"],a:1,f:"زيادة التركيز يزيد التصادمات."},
+        {s:"الاتزان الكيميائي",q:"ما تأثير رفع درجة الحرارة على ثابت الاتزان Keq للتفاعل الطارد للحرارة؟",o:["يزداد Keq","يقل Keq","لا يتغير Keq","يصبح Keq = صفر"],a:1,f:"للتفاعل الطارد: رفع الحرارة يقلل Keq."},
+        {s:"الكيمياء العضوية",q:"أي مما يلي يُعدّ بوليمرًا طبيعيًا؟",o:["النايلون","البولي إيثيلين","السليلوز","PVC"],a:2,f:"السليلوز طبيعي."},
+        {s:"الكيمياء العضوية",q:"في تسمية الهالوألكانات، يأتي اسم الهالوجين:",o:["بعد اسم الألكان","في الوسط","كبادئة قبل اسم الألكان","بعد رقم موضع الهالوجين فقط"],a:2,f:"بادئة (كلورو، برومو...)."},
+        {s:"الكيمياء العضوية",q:"أي الخصائص التالية صحيحة للألكانات؟",o:["تذوب بسهولة في الماء","لها نقاط غليان منخفضة جدًا","تتفاعل بسهولة مع الماء","غير نشطة كيميائيًا نسبيًا"],a:3,f:"الألكانات خاملة كيميائياً (بارافينات)."},
+        {s:"الكيمياء الحيوية",q:"الدهون تتحلل مائيًا إلى:",o:["أحماض أمينية","جلوكوز فقط","جليسيرول + أحماض دهنية","نيوكليوتيدات"],a:2,f:"الدهون الثلاثية → جليسيرول + أحماض دهنية."},
+        {s:"الكيمياء العضوية",q:"رابطة C≡C تميّز فئة:",o:["الألكانات","الألكينات","الألكاينات","الأرينات"],a:2,f:"الألكاينات."},
+        {s:"سرعة التفاعل",q:"وحدة قياس سرعة التفاعل الكيميائي هي:",o:["mol فقط","ثانية فقط","mol/L·s (أو M/s)","kJ/mol"],a:2,f:"Molarity لكل ثانية."},
+        {s:"الاتزان الكيميائي",q:"في التفاعل: N₂(g) + 3H₂(g) ⇌ 2NH₃(g)، زيادة ضغط المنظومة تزيح الاتزان نحو:",o:["اليسار (نحو N₂ وH₂)","اليمين (نحو NH₃)","لا تأثير للضغط","تُحلل NH₃"],a:1,f:"عدد مولات أقل غازياً جهة NH₃."}
+    ];
+    // تأكيد العدد 67
+    console.assert(ORIGINAL_QUESTIONS.length === 67, "عدد الأسئلة يجب أن يكون 67");
+
+    // ------------------ حالة التطبيق ------------------
+    let appState = {
+        answers: new Array(67).fill(undefined),
+        marked: new Array(67).fill(false),
+        currentIdx: 0,
+        filterMode: 'all', // all, wrong, marked
+        searchTerm: '',
+        selectedTopic: 'all'
+    };
+
+    // تحميل وحفظ
+    function saveState() {
+        localStorage.setItem('chemPro_v2', JSON.stringify({
+            answers: appState.answers,
+            marked: appState.marked,
+            currentIdx: appState.currentIdx
+        }));
+    }
+    function loadState() {
+        const saved = localStorage.getItem('chemPro_v2');
+        if(saved) {
+            try {
+                const data = JSON.parse(saved);
+                if(data.answers) appState.answers = data.answers;
+                if(data.marked) appState.marked = data.marked;
+                if(typeof data.currentIdx === 'number') appState.currentIdx = data.currentIdx;
+            } catch(e) {}
+        }
+        updateStatsUI();
+    }
+
+    function updateStatsUI() {
+        let correct = 0, wrong = 0, answeredTotal = 0;
+        appState.answers.forEach((ans, idx) => {
+            if(ans !== undefined) {
+                answeredTotal++;
+                if(ans === ORIGINAL_QUESTIONS[idx].a) correct++;
+                else wrong++;
+            }
+        });
+        document.getElementById('correctCount').innerText = correct;
+        document.getElementById('wrongCount').innerText = wrong;
+        document.getElementById('totalAnswered').innerText = answeredTotal;
+        let percent = (answeredTotal / 67) * 100;
+        document.getElementById('percentVal').innerText = Math.round(percent) + '%';
+        document.getElementById('progressFill').style.width = percent + '%';
+    }
+
+    // فلترة الأسئلة
+    function getFilteredIndices() {
+        let indices = [...Array(67).keys()];
+        const search = document.getElementById('searchInput').value.trim().toLowerCase();
+        const topic = document.getElementById('topicSelect').value;
+        if(search) indices = indices.filter(i => ORIGINAL_QUESTIONS[i].q.toLowerCase().includes(search) || ORIGINAL_QUESTIONS[i].s.toLowerCase().includes(search));
+        if(topic !== 'all') indices = indices.filter(i => ORIGINAL_QUESTIONS[i].s === topic);
+        if(appState.filterMode === 'wrong') indices = indices.filter(i => appState.answers[i] !== undefined && appState.answers[i] !== ORIGINAL_QUESTIONS[i].a);
+        if(appState.filterMode === 'marked') indices = indices.filter(i => appState.marked[i] === true);
+        return indices;
+    }
+
+    function renderSidebar() {
+        const filtered = getFilteredIndices();
+        const container = document.getElementById('questionsGrid');
+        container.innerHTML = '';
+        filtered.forEach(idx => {
+            const btn = document.createElement('div');
+            btn.className = 'q-marker';
+            if(appState.answers[idx] !== undefined) btn.classList.add(appState.answers[idx] === ORIGINAL_QUESTIONS[idx].a ? 'correct' : 'wrong');
+            else btn.classList.add('unanswered');
+            if(appState.marked[idx]) btn.classList.add('marked');
+            if(idx === appState.currentIdx) btn.classList.add('current');
+            btn.innerText = idx+1;
+            btn.addEventListener('click', () => { appState.currentIdx = idx; renderCurrentQuestion(); renderSidebar(); saveState(); });
+            container.appendChild(btn);
+        });
+    }
+
+    function renderCurrentQuestion() {
+        const q = ORIGINAL_QUESTIONS[appState.currentIdx];
+        const answered = appState.answers[appState.currentIdx];
+        let optsHtml = '';
+        const letters = ['أ', 'ب', 'ج', 'د'];
+        q.o.forEach((opt, i) => {
+            let extra = '';
+            let disabled = answered !== undefined ? 'disabled' : '';
+            if(answered !== undefined) {
+                if(i === q.a) extra = 'correct-highlight';
+                else if(i === answered && i !== q.a) extra = 'wrong-highlight';
+            }
+            optsHtml += `<div class="option ${extra} ${disabled ? 'disabled-opt' : ''}" data-opt="${i}">${letters[i]}. ${opt}</div>`;
+        });
+        let feedback = '';
+        if(answered !== undefined) {
+            const isCor = answered === q.a;
+            feedback = `<div class="feedback-area"><i class="fas ${isCor ? 'fa-check-circle' : 'fa-times-circle'}"></i> <strong>${isCor ? 'صحيح ✔' : 'خطأ ✘'}</strong><br>${q.f}</div>`;
+        }
+        const markIcon = appState.marked[appState.currentIdx] ? '<i class="fas fa-star"></i> إزالة علامة مهم' : '<i class="far fa-star"></i> وضع علامة مهم';
+        const html = `
+            <div class="question-card">
+                <span class="topic-tag">${q.s}</span>
+                <div class="question-text">${q.q}</div>
+                <div class="options-list" id="optionsContainer">${optsHtml}</div>
+                ${feedback}
+                <div class="action-buttons">
+                    <button id="markBtn">${markIcon}</button>
+                    ${answered !== undefined ? '<button id="resetCurrentBtn"><i class="fas fa-redo-alt"></i> إعادة المحاولة</button>' : ''}
+                    <div><button id="prevBtn" ${appState.currentIdx===0?'disabled':''}><i class="fas fa-chevron-right"></i> السابق</button>
+                    <button id="nextBtn" ${appState.currentIdx===66?'disabled':''}>التالي <i class="fas fa-chevron-left"></i></button></div>
+                </div>
+            </div>
+        `;
+        document.getElementById('questionCard').innerHTML = html;
+        // إضافة الأحداث
+        document.querySelectorAll('.option').forEach(el => {
+            if(!el.classList.contains('disabled-opt'))
+                el.addEventListener('click', (e) => { selectAnswer(parseInt(el.dataset.opt)); });
+        });
+        document.getElementById('markBtn')?.addEventListener('click', () => { toggleMark(); });
+        document.getElementById('resetCurrentBtn')?.addEventListener('click', () => { resetCurrent(); });
+        document.getElementById('prevBtn')?.addEventListener('click', () => { if(appState.currentIdx>0){ appState.currentIdx--; renderCurrentQuestion(); renderSidebar(); saveState(); } });
+        document.getElementById('nextBtn')?.addEventListener('click', () => { if(appState.currentIdx<66){ appState.currentIdx++; renderCurrentQuestion(); renderSidebar(); saveState(); } });
+        // إعادة تقديم الصيغ الكيميائية
+        if(typeof renderMathInElement === 'function') renderMathInElement(document.getElementById('questionCard'), {delimiters:[{left:"$",right:"$",display:false}], throwOnError:false});
+    }
+
+    function selectAnswer(optIndex) {
+        if(appState.answers[appState.currentIdx] !== undefined) return;
+        const isCorrect = (optIndex === ORIGINAL_QUESTIONS[appState.currentIdx].a);
+        appState.answers[appState.currentIdx] = optIndex;
+        updateStatsUI();
+        renderCurrentQuestion();
+        renderSidebar();
+        saveState();
+        showToast(isCorrect ? 'إجابة صحيحة! أحسنت' : 'إجابة خاطئة، راجع الشرح', isCorrect ? 'success' : 'error');
+        // مؤثر صوتي بسيط (اختياري)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = isCorrect ? 880 : 440;
+        gain.gain.value = 0.1;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function toggleMark() {
+        appState.marked[appState.currentIdx] = !appState.marked[appState.currentIdx];
+        renderCurrentQuestion();
+        renderSidebar();
+        saveState();
+        showToast(appState.marked[appState.currentIdx] ? 'تمت إضافة السؤال للمهمة' : 'إزالة من المهمة', 'info');
+    }
+    function resetCurrent() {
+        appState.answers[appState.currentIdx] = undefined;
+        updateStatsUI();
+        renderCurrentQuestion();
+        renderSidebar();
+        saveState();
+    }
+    function fullReset() {
+        if(confirm('هل أنت متأكد من مسح كل التقدم؟')) {
+            appState.answers.fill(undefined);
+            appState.marked.fill(false);
+            appState.currentIdx = 0;
+            updateStatsUI();
+            renderCurrentQuestion();
+            renderSidebar();
+            saveState();
+            showToast('تمت إعادة تعيين كل البيانات', 'info');
+        }
+    }
+    function showToast(msg, type) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-circle':'fa-info-circle'}"></i> ${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    // تعبئة خيارات المواد
+    function initTopics() {
+        const topics = [...new Set(ORIGINAL_QUESTIONS.map(q=>q.s))];
+        const select = document.getElementById('topicSelect');
+        select.innerHTML = '<option value="all">كل المواضيع</option>';
+        topics.forEach(t => { select.innerHTML += `<option value="${t}">${t}</option>`; });
+        select.addEventListener('change', () => { appState.selectedTopic = select.value; renderSidebar(); renderCurrentQuestion(); });
+    }
+
+    // مولد الاختبارات العشوائية
+    function generateRandomQuiz() {
+        let size = parseInt(document.getElementById('quizSize').value);
+        size = Math.min(67, Math.max(1, size));
+        const shuffled = [...ORIGINAL_QUESTIONS];
+        for(let i=shuffled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]]=[shuffled[j], shuffled[i]]; }
+        const selected = shuffled.slice(0, size);
+        let quizHtml = `<div style="background:var(--bg); padding:16px; border-radius:24px;"><h4>اختبار عشوائي (${size} سؤال)</h4>`;
+        selected.forEach((q, idx) => {
+            const letters = ['أ','ب','ج','د'];
+            quizHtml += `<div style="border-bottom:1px solid var(--border); margin-bottom:16px; padding-bottom:12px;"><p><strong>${idx+1}. ${q.q}</strong></p><div style="display:flex; flex-wrap:wrap; gap:8px; margin:8px 0;">`;
+            q.o.forEach((opt, oi) => { quizHtml += `<span style="background:var(--surface); padding:6px 12px; border-radius:30px;">${letters[oi]}: ${opt}</span>`; });
+            quizHtml += `</div><details><summary style="cursor:pointer; color:var(--primary);">📖 الإجابة والشرح</summary><div style="background:var(--primary-light); padding:10px; border-radius:16px; margin-top:8px;"><strong>${letters[q.a]}</strong> - ${q.o[q.a]}<br>${q.f}</div></details></div>`;
+        });
+        quizHtml += `<div style="margin-top:20px;"><button id="printQuizBtn" class="primary"><i class="fas fa-print"></i> طباعة / حفظ PDF</button></div></div>`;
+        document.getElementById('generatedQuizArea').innerHTML = quizHtml;
+        document.getElementById('printQuizBtn')?.addEventListener('click', () => { window.print(); });
+    }
+
+    // أحداث
+    document.getElementById('searchInput').addEventListener('input', () => { renderSidebar(); });
+    document.getElementById('filterAll').addEventListener('click', () => { appState.filterMode='all'; setActiveFilter('filterAll'); renderSidebar(); });
+    document.getElementById('filterWrong').addEventListener('click', () => { appState.filterMode='wrong'; setActiveFilter('filterWrong'); renderSidebar(); });
+    document.getElementById('filterMarked').addEventListener('click', () => { appState.filterMode='marked'; setActiveFilter('filterMarked'); renderSidebar(); });
+    function setActiveFilter(activeId) { ['filterAll','filterWrong','filterMarked'].forEach(id=> document.getElementById(id).classList.remove('active')); document.getElementById(activeId).classList.add('active'); }
+    document.getElementById('fullResetBtn').addEventListener('click', fullReset);
+    document.getElementById('generateQuizBtn').addEventListener('click', generateRandomQuiz);
+    document.getElementById('themeSwitcher').addEventListener('click', () => { document.body.classList.toggle('dark'); localStorage.setItem('chemTheme', document.body.classList.contains('dark')?'dark':'light'); });
+    document.getElementById('restartFromLastBtn').addEventListener('click', () => { renderCurrentQuestion(); renderSidebar(); showToast('تم استئناف المراجعة من آخر نقطة', 'info'); });
+    if(localStorage.getItem('chemTheme') === 'dark') document.body.classList.add('dark');
+
+    // عرض الترحيب
+    function showWelcomeIfNeeded() {
+        if(!localStorage.getItem('welcomedChem')) {
+            document.getElementById('welcomeModal').classList.add('active');
+            document.getElementById('closeWelcome').onclick = () => { document.getElementById('welcomeModal').classList.remove('active'); localStorage.setItem('welcomedChem','true'); };
+        }
+    }
+
+    loadState();
+    initTopics();
+    renderSidebar();
+    renderCurrentQuestion();
+    updateStatsUI();
+    showWelcomeIfNeeded();
+</script>
+</body>
+</html>
